@@ -15,7 +15,7 @@ namespace CustomQuest
             if (Plugin.questGiver != null && Plugin.questGiver.ContainsKey(_dialogData._nameTag))
             {
                 _dialogData._scriptableQuests ??= [];
-                List<ScriptableQuest> list = [];
+                List<ScriptableQuest> list = _dialogData._scriptableQuests.ToList();
 
                 foreach (string questName in Plugin.questGiver[_dialogData._nameTag])
                 {
