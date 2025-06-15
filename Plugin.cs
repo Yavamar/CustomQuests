@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace CustomQuest;
@@ -32,37 +29,40 @@ public class Plugin : BaseUnityPlugin
 
         if (Directory.Exists(Paths.PluginPath))
         {
-            CheckDirectory(Paths.PluginPath);
+            FindCustomQuestsFolder(Paths.PluginPath);
         }
 
         new Harmony(MyPluginInfo.PLUGIN_GUID).PatchAll(Assembly.GetExecutingAssembly());
 
     }
-    public static void CheckDirectory(string dirPath)
+    public static void FindCustomQuestsFolder(string dirPath)
     {
-        if(dirPath.ToUpper().EndsWith("QUEST"))
+        if(dirPath.ToUpper().EndsWith("CUSTOMQUESTS") && !dirPath.ToUpper().EndsWith("-CUSTOMQUESTS"))
         {
-            string[] files = Directory.GetFiles(dirPath);
-            foreach (string filePath in files)
-            {
-                CheckFile(filePath);
-            }
+            CheckFiles(dirPath);
         }
         string[] directories = Directory.GetDirectories(dirPath);
         string[] array2 = directories;
         foreach (string dirPath2 in array2)
         {
-            CheckDirectory(dirPath2);
+            FindCustomQuestsFolder(dirPath2);
         }
     }
-    public static void CheckFile(string filePath)
+    public static void CheckFiles(string path)
     {
-        if (filePath.ToUpper().EndsWith(".JSON"))
+        foreach (string filePath in Directory.GetFiles(path))
         {
-            Logger.LogInfo("Adding to list of quests to be added");
-            jsonFilePaths.Add(filePath);
-            Logger.LogInfo("Successfully loaded JSON Quest file!");
+            if (filePath.ToUpper().EndsWith(".JSON"))
+            {
+                Logger.LogInfo($"Adding {filePath} to list of quest files to be read.");
+                jsonFilePaths.Add(filePath);
+            }
         }
+        foreach (string dirPath in Directory.GetDirectories(path))
+        { 
+        CheckFiles(dirPath);
+        }
+
     }
 }
 

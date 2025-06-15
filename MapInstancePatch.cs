@@ -23,10 +23,10 @@ namespace CustomQuest
 
                     foreach (GameObject a in triggers)
                     {
-                        Plugin.Logger.LogMessage(a.name);
+                        //Plugin.Logger.LogMessage(a.name);
                         if (a.GetComponent<QuestTrigger>() != null)
                         {
-                            Plugin.Logger.LogMessage("It's this one!");
+                            //Plugin.Logger.LogMessage("It's this one!");
                             questTriggerPrefab = a;
                             break;
                         }
@@ -72,9 +72,13 @@ namespace CustomQuest
                     questTrigger._patternInstanceManager = null; //__instance, but only if it's _arenaSweepQuest I think?
                     Enum.TryParse("", out questTrigger._difficultyRequirement);
                     questTrigger._arenaSweepQuest = trigger._arenaSweepQuest;
-
-                    //questTrigger._visualContainer = null;
-
+                    /*
+                    questTrigger._visualContainer = null;
+                    questTrigger._questTriggerAnimator = null;
+                    questTrigger._questTriggerParticles = null;
+                    questTrigger._aSrcOnInteract = null;
+                    questTrigger._disableVisualIfNotOnQuest = true;
+                    */
                     // Collider
                     switch (trigger._triggerCollider.type)
                     {
