@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +22,7 @@ public class Plugin : BaseUnityPlugin
     public static List<string> jsonFilePaths = [];
     public static List<ParsedQuest> parsedQuests = [];
     public static Dictionary<string, List<string>> questGiver = [];
+    public static List<ParsedQuestTrigger> parsedQuestTriggers = [];
 
     private void Awake()
     {

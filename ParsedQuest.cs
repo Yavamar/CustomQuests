@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace CustomQuest
 {
@@ -24,9 +25,40 @@ namespace CustomQuest
         public Dictionary<string, int> _questCreepRequirements { get; set; }
         public QuestTriggerRequirement[] _questTriggerRequirements { get; set; }
         //public QuestObjective _questObjective { get; set; }
+        public List<ParsedQuestTrigger> questTriggers { get; set; }
         public float _questExperiencePercentage { get; set; }
         public int _questCurrencyReward { get; set; }
         public Dictionary<string, int> _questItemRewards { get; set; }
         public bool _displayEndDemoPrompt { get; set; }
+    }
+
+    public class ParsedQuestTrigger
+    {
+        public string _questTriggerTag { get; set; }
+        public string _mapInstance { get; set; }
+        public Vector3 position { get; set; }
+        public string _difficultyRequirement { get; set; }
+        public bool _interactTrigger { get; set; }
+        public bool _completedRequirements { get; set; }
+        public bool _questTriggerOnlyOnce { get; set; }
+        public NetTrigger _netTriggerToInvoke { get; set; }
+        public string _netTriggerType { get; set; }
+        public TriggerMessage _triggerMessage { get; set; }
+        public bool _arenaSweepQuest { get; set; }
+        public ParsedCollider _triggerCollider { get; set; }
+
+        //This will be set by the code, not by the JSON
+        public ScriptableQuest _scriptQuest { get; set; }
+
+    }
+    public class ParsedCollider
+    {
+        public string type { get; set; }
+        public Vector3 center { get; set; }
+        public float radius { get; set; }
+        public Vector3 size { get; set; }
+        public float height { get; set; }
+        public int direction { get; set; }
+
     }
 }

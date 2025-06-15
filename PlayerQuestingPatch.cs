@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CustomPrimitiveColliders;
 using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -41,13 +42,13 @@ namespace CustomQuest
             gameManager._cachedScriptableQuests.TryGetValue(parsedQuest._questName, out ScriptableQuest quest);
 
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Type.");
-            if (!Enum.TryParse<QuestType>(parsedQuest._questType, out quest._questType))
+            if (!Enum.TryParse(parsedQuest._questType, out quest._questType))
             {
                 Plugin.Logger.LogWarning($"_questType {parsedQuest._questType} is not valid.");
             }
 
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest SubType.");
-            if (!Enum.TryParse<QuestSubType>(parsedQuest._questSubType, out quest._questSubType))
+            if (!Enum.TryParse(parsedQuest._questSubType, out quest._questSubType))
             {
                 Plugin.Logger.LogWarning($"_questSubType {parsedQuest._questSubType} is not valid.");
             }
@@ -156,6 +157,15 @@ namespace CustomQuest
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Trigger Requirements.");
                 quest._questObjective._questTriggerRequirements = parsedQuest._questTriggerRequirements;
+            }
+
+            if (parsedQuest.questTriggers != null)
+            {
+                foreach (ParsedQuestTrigger trigger in parsedQuest.questTriggers)
+                {
+                    trigger._scriptQuest = quest;
+                    Plugin.parsedQuestTriggers.Add(trigger);
+                }
             }
 
             if (parsedQuest._questObjectiveItem != null)
