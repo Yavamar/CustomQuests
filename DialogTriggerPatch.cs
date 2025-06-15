@@ -75,19 +75,6 @@ namespace CustomQuest
                     _dialogData._questCompleteResponses = ["Quest Complete!"];
                 }
             }
-            /*
-            Plugin.Logger.LogInfo($"Hopefully forced the updated ScriptableDialogData onto {_dialogData._nameTag}");
-
-            foreach(var (questName, quest) in Patch._cachedScriptableQuests)
-            {
-                Plugin.Logger.LogInfo($"Quest '{questName}' still exists");
-            }
-
-            foreach (var quest in _dialogData._scriptableQuests)
-            {
-                Plugin.Logger.LogInfo($"Quest '{quest._questName}' still exists for {_dialogData._nameTag}");
-            }
-            */
         }
     }
 }
