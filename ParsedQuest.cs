@@ -37,22 +37,18 @@ namespace CustomQuest
 
     public class ParsedQuestTrigger
     {
-        public string _questTriggerTag { get; set; } // Essentially the name of the quest trigger. It must match a _questTriggerTag from a quest's _questTriggerRequirements
-        public string _mapInstance { get; set; } // The map you want the trigger to appear in.
-        public Vector3 position { get; set; } // The 3D coordinates of the trigger. {"x": 123, "y": 456, "z": 789}
-        public string _difficultyRequirement { get; set; } // Dungeon difficulty requirement. Irrelevant for open-world quest triggers. "EASY", "NORMAL", or "HARD"
-        public bool _interactTrigger { get; set; } // If true, the player must press the Interact key to activate the trigger. If false, they only have to get close to it.
-        public bool _completedRequirements { get; set; } // ??? (This seems to be true in every quest I've seen)
-        public bool _questTriggerOnlyOnce { get; set; } // ??? (I haven't encountered any quest triggers that require multiple activations)
-        public NetTrigger _netTriggerToInvoke { get; set; } // Not yet implemented in CustomQuests. Used to open the door to Crescent Grove.
-        public string _netTriggerType { get; set; } // Determines when the NetTrigger is enabled.
-        public TriggerMessage _triggerMessage { get; set; } // Messages that appear when the quest trigger is activated.
-            // string _singleMessage: Message that appears when the quest trigger is successfully activated
-            // string _incompleteMessage: Message that appears when the quest trigger is activated, but the objective hasn't been met (used for dungeon sweeps where enemies are still alive).
-            // string[] _triggerMessageArray: ??? (I'm assuming it lets you set different messages for multiple trigger activations)
-            // bool _sentMessage: ??? (Always seems to be false)
-        public bool _arenaSweepQuest { get; set; } // All enemies in the dungeon must be killed to activate the quest trigger.
-        public ParsedCollider _triggerCollider { get; set; } // An object representing the area where the trigger activates. See ParsedCollider below.
+        public string _questTriggerTag { get; set; }
+        public string _mapInstance { get; set; }
+        public Vector3 position { get; set; }
+        public string _difficultyRequirement { get; set; }
+        public bool _interactTrigger { get; set; }
+        public bool _completedRequirements { get; set; }
+        public bool _questTriggerOnlyOnce { get; set; }
+        public NetTrigger _netTriggerToInvoke { get; set; }
+        public string _netTriggerType { get; set; }
+        public TriggerMessage _triggerMessage { get; set; }
+        public bool _arenaSweepQuest { get; set; }
+        public ParsedCollider _triggerCollider { get; set; }
 
         //This will be set by the code, not by the JSON
         public ScriptableQuest _scriptQuest { get; set; } // The quest that the trigger applies to. You do not need to manually set this.
