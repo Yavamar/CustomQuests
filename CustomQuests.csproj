@@ -36,7 +36,7 @@
 		<Reference Include="Unity.TextMeshPro">
 			<HintPath>$(GameDataPath)\Managed\Unity.TextMeshPro.dll</HintPath>
 		</Reference>
-		<Reference Include="UnityEngine.UI" Publicize="true" Private="False" >
+		<Reference Include="UnityEngine.UI" Publicize="true" Private="False">
 			<HintPath>$(GameDataPath)\Managed\UnityEngine.UI.dll</HintPath>
 		</Reference>
 		<Reference Include="Mirror" Publicize="true" Private="False">
