@@ -37,7 +37,7 @@ public class Plugin : BaseUnityPlugin
     }
     public static void FindCustomQuestsFolder(string dirPath)
     {
-        if(dirPath.ToUpper().EndsWith("CUSTOMQUESTS") && !dirPath.ToUpper().EndsWith("-CUSTOMQUESTS"))
+        if(dirPath.ToUpper().EndsWith("CUSTOMQUESTS-FILES"))
         {
             CheckFiles(dirPath);
         }

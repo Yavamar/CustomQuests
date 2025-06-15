@@ -58,7 +58,7 @@ namespace CustomQuest
                     questTrigger._scriptQuest = trigger._scriptQuest;
 
                     questTrigger._mapInstance = __instance;
-                    Plugin.Logger.LogInfo(questTrigger._mapInstance._mapName);
+
                     questTrigger._questTriggerTag = trigger._questTriggerTag;
                     questTrigger._interactTrigger = trigger._interactTrigger;
                     questTrigger._completedRequirements = trigger._completedRequirements;
@@ -72,6 +72,7 @@ namespace CustomQuest
                     questTrigger._patternInstanceManager = null; //__instance, but only if it's _arenaSweepQuest I think?
                     Enum.TryParse("", out questTrigger._difficultyRequirement);
                     questTrigger._arenaSweepQuest = trigger._arenaSweepQuest;
+
                     /*
                     questTrigger._visualContainer = null;
                     questTrigger._questTriggerAnimator = null;
@@ -79,6 +80,7 @@ namespace CustomQuest
                     questTrigger._aSrcOnInteract = null;
                     questTrigger._disableVisualIfNotOnQuest = true;
                     */
+
                     // Collider
                     switch (trigger._triggerCollider.type)
                     {
