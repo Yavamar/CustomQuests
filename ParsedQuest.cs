@@ -11,7 +11,7 @@ namespace CustomQuest
     /// int = Integer. Whole numbers, no decimals.
     /// float = Floating Point. These are numbers that can contain decimals.
     /// bool = Boolean. The only valid values are true (On, Yes) or false (Off, No).
-    /// Dictionary<string, int> = A series of key:value pair where no two keys can be the same.
+    /// Dictionary<string, int> = A series of key:value pairs where no two keys can be the same.
     /// 
     /// Any type that ends with brackets [] is an array, which means it can contain multiple values. In the JSON file, this will be represented by a comma-separated list between brackets [].
     /// 
