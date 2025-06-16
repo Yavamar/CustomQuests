@@ -13,7 +13,7 @@ namespace CustomQuest
     /// bool = Boolean. The only valid values are true (On, Yes) or false (Off, No).
     /// Dictionary<string, int> = A series of key:value pairs where no two keys can be the same.
     /// 
-    /// Any type that ends with brackets [] is an array, which means it can contain multiple values. In the JSON file, this will be represented by a comma-separated list between brackets [].
+    /// Any type that ends with brackets [] is an array, which means it can contain multiple values of the same type. In the JSON file, this will be represented by a comma-separated list between brackets [].
     /// 
     /// More complex types such as QuestTriggerRequirement or ParsedQuestTrigger can be broken down into simpler types. Explanations for the fields contained within, and their types, are below.
     /// </summary>
@@ -27,8 +27,8 @@ namespace CustomQuest
         public string _questDescription { get; set; } // Quest description. You can use color tags here.
         public string _questCompleteReturnMessage { get; set; } // Message that appears in the quest log once all objectives are complete. Usually tells the player which NPC to return to and where they are.
         public int _questLevel { get; set; } // Minimum level to accept the quest.
-        public string _raceRequirement { get; set; } // Only characters of the specified race can do this quest. Leave this field out to allow all races.
-        public string _baseClassRequirement { get; set; } // Only characters of the specified class can do this quest. Leave this field out to allow all classes.
+        public string _raceRequirement { get; set; } // "IMP", "POON", "KUBOLD", "BYRDLE", "CHANG". Only characters of the specified race can do this quest. Leave this field out to allow all races.
+        public string _baseClassRequirement { get; set; } // "FIGHTER", "BANDIT", "MYSTIC". Only characters of the specified class can do this quest. Leave this field out to allow all classes.
         public string _skillToHide { get; set; } // ???
         public bool _requireNoviceClass { get; set; } // Only appears for Novice class. The quests for choosing your class at Lv10 use this.
         public bool _autoFinishQuest { get; set; } // Quest auto-completes once objectives are met. The class choice and weapon mastery quests use this.
@@ -43,7 +43,8 @@ namespace CustomQuest
             // string _suffix: Second part of the requirement that appears in your quest log.
             // int _triggerEmitsNeeded: Number of times the trigger must be activated.
         public List<ParsedQuestTrigger> questTriggers { get; set; } // Creates new quest triggers for this quest. See the ParsedQuestTrigger class below.
-        public float _questExperiencePercentage { get; set; } // XP you recieve upon completing the quest. I'm not entirely sure how it is calculated.
+        public float _questExperiencePercentage { get; set; } // XP you recieve upon completing the quest, which is then multiplied by the XP gain curve to determine the actual amount of XP rewarded.
+        public int _questExperienceReward { get; set; } // XP you recieve upon completing the quest. This will override _questExperiencePercentage if provided. Might be slightly inaccurate due to type conversions.
         public int _questCurrencyReward { get; set; } // The number of Crowns you receive upon completing the quest.
         public Dictionary<string, int> _questItemRewards { get; set; } // Items (and the amount of each item) you receive upon completing the quest.
         public bool _displayEndDemoPrompt { get; set; } // ???
@@ -75,7 +76,6 @@ namespace CustomQuest
 
         //This will be set by the code, not by the JSON
         public ScriptableQuest _scriptQuest { get; set; } // The quest that the trigger applies to. You do not need to manually set this.
-
     }
 
     /// <summary>
@@ -89,6 +89,5 @@ namespace CustomQuest
         public Vector3 size { get; set; } // Used by Box colliders. Sets the length, height, and width of the box using {"x": 123, "y": 456, "z": 789}
         public float height { get; set; } // Used by Capsule colliders.
         public int direction { get; set; } // Used by Capsule colliders.
-
     }
 }

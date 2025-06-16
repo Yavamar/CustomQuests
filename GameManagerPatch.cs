@@ -1,5 +1,4 @@
 using System.IO;
-using System.Linq;
 using HarmonyLib;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -13,26 +12,31 @@ public static class GameManagerPatch
     [HarmonyPostfix]
     private static void Cache_ScriptableAssetsPatch()
     {
+        // Grab the GameManager and save it for use elsewhere.
         Plugin.gameManager = GameManager._current;
 
+        // Create a cached dictionary of sprite names and their related sprites so we can find them later.
         Sprite[] array = Resources.LoadAll<Sprite>("_GRAPHIC/_UI/");
 
         for (int i = 0; i < array.Length; i++)
         {
             Plugin._cachedSprite.Add(array[i].name, array[i]);
-            //Plugin.Logger.LogInfo($"Cached Sprite for {array[i].name}");
         }
+
+        // Parse all of the JSON quest files.
         foreach(string filePath in Plugin.jsonFilePaths)
         {
             ParseJsonQuest(filePath);
         }
+
+        // Clear the list of JSON files after they've been loaded. We don't need them any more and we don't want to accidentally parse them again.
         Plugin.jsonFilePaths.Clear();
     }
 
     //Add the quest to the dictionary early, then set up the inter-dependencies in PlayerQuetingPatch.cs later after all quests, creeps, items, etc. are loaded.
     public static void ParseJsonQuest(string filePath)
     {
-        // Parse the JSON file into an object
+        // Parse the JSON file into an object.
         ParsedQuest parsedQuest = new JsonSerializer().Deserialize<ParsedQuest>(new JsonTextReader(new StreamReader(filePath)));
 
         ScriptableQuest quest = ScriptableObject.CreateInstance<ScriptableQuest>();
@@ -45,26 +49,38 @@ public static class GameManagerPatch
         quest._requireNoviceClass = parsedQuest._requireNoviceClass;
         quest._autoFinishQuest = parsedQuest._autoFinishQuest;
         quest._scenePath = parsedQuest._scenePath;
-        quest._questExperiencePercentage = parsedQuest._questExperiencePercentage;
+        if (parsedQuest._questExperienceReward != 0)
+        {
+            float curve = Plugin.gameManager._statLogics._experienceCurve.Evaluate(quest._questLevel);
+            quest._questExperiencePercentage = parsedQuest._questExperienceReward / curve;
+            // Attempt to deal with precision loss.
+            int difference = parsedQuest._questExperienceReward - (int)(quest._questExperiencePercentage * curve);
+            quest._questExperiencePercentage = (parsedQuest._questExperienceReward + difference) / curve;
+
+        }
+        else
+        {
+            quest._questExperiencePercentage = parsedQuest._questExperiencePercentage;
+        }
         quest._questCurrencyReward = parsedQuest._questCurrencyReward;
         quest._displayEndDemoPrompt = parsedQuest._displayEndDemoPrompt;
 
-        // Initialize all of the arrays
+        // Initialize all of the arrays.
         quest._preQuestRequirements = [];
         quest._questObjectiveItem = new();
         quest._questItemRewards = [];
-        quest._questObjective = new() //parsedQuest._questObjective;
+        quest._questObjective = new()
         {
             _questCreepRequirements = [],
             _questItemRequirements = [],
             _questTriggerRequirements = []
         };
 
-        // Add quest to the cache
+        // Add quest to the cache.
         Plugin.gameManager._cachedScriptableQuests.Add(quest._questName, quest);
         Plugin.Logger.LogInfo(quest._questName + ": Cached.");
 
-        // Save the rest of the quest setup for later
+        // Save the rest of the quest setup for later.
         Plugin.parsedQuests.Add(parsedQuest);
     }
 }
