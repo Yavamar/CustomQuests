@@ -9,6 +9,7 @@ namespace CustomQuest;
 [HarmonyPatch(typeof(GameManager), "Cache_ScriptableAssets")]
 public static class GameManagerPatch
 {
+    // This function executes as soon as the game is launched.
     [HarmonyPostfix]
     private static void Cache_ScriptableAssetsPatch()
     {
@@ -51,12 +52,11 @@ public static class GameManagerPatch
         quest._scenePath = parsedQuest._scenePath;
         if (parsedQuest._questExperienceReward != 0)
         {
-            float curve = Plugin.gameManager._statLogics._experienceCurve.Evaluate(quest._questLevel);
-            quest._questExperiencePercentage = parsedQuest._questExperienceReward / curve;
             // Attempt to deal with precision loss.
-            int difference = parsedQuest._questExperienceReward - (int)(quest._questExperiencePercentage * curve);
-            quest._questExperiencePercentage = (parsedQuest._questExperienceReward + difference) / curve;
-
+            quest._questExperiencePercentage = (float)((parsedQuest._questExperienceReward) / GameManager._current._statLogics._experienceCurve.Evaluate(quest._questLevel));
+            int actualXp = (int)((float)(int)GameManager._current._statLogics._experienceCurve.Evaluate(quest._questLevel) * quest._questExperiencePercentage);
+            int difference = parsedQuest._questExperienceReward - actualXp;
+            quest._questExperiencePercentage = (float)((parsedQuest._questExperienceReward + difference) / GameManager._current._statLogics._experienceCurve.Evaluate(quest._questLevel));
         }
         else
         {

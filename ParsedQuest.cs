@@ -90,8 +90,8 @@ namespace CustomQuest
         public TriggerMessage _triggerMessage { get; set; } // Messages that appear when the quest trigger is activated.
             // string _singleMessage: Message that appears when the quest trigger is successfully activated
             // string _incompleteMessage: Message that appears when the quest trigger is activated, but the objective hasn't been met (used for dungeon sweeps where enemies are still alive).
-            // string[] _triggerMessageArray: ??? (I'm assuming it lets you set different messages for multiple trigger activations)
-            // bool _sentMessage: ??? (Always seems to be false)
+            // string[] _triggerMessageArray: One of these messages is chosen at random when activating a quest trigger. Seems to override _singleMessage.
+            // bool _sentMessage: Sets whether a message has been sent. You do not need to manually set this.
         public bool _arenaSweepQuest { get; set; } // All enemies in the dungeon must be killed to activate the quest trigger.
         public ParsedCollider _triggerCollider { get; set; } // An object representing the area where the trigger activates. See ParsedCollider class below.
 

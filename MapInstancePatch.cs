@@ -9,6 +9,7 @@ namespace CustomQuest
     [HarmonyPatch(typeof(MapInstance), "Start")]
     internal class MapInstancePatch
     {
+        // This function will execute any time a new map gets loaded. Basically whenever the player changes areas.
         public static void Postfix(MapInstance __instance)
         {
             foreach (ParsedQuestTrigger trigger in Plugin.parsedQuestTriggers)
@@ -34,6 +35,7 @@ namespace CustomQuest
                     
                     Plugin.Logger.LogInfo("Registering Quest Trigger prefab");
 
+                    // None of this seems to do anything to stop the Quest Trigger from having a visual element, and I'm not sure why.
                     questTriggerPrefab.GetComponent<QuestTrigger>()._visualContainer = null;
                     questTriggerPrefab.GetComponent<QuestTrigger>()._questTriggerAnimator = null;
                     questTriggerPrefab.GetComponent<QuestTrigger>()._questTriggerParticles = null;
@@ -53,7 +55,7 @@ namespace CustomQuest
                     netID.visible = Visibility.Default;
                     netID.hasSpawned = false;
                     */
-
+                    
                     QuestTrigger questTrigger = questTriggerObject.GetComponent<QuestTrigger>();
                     questTrigger._scriptQuest = trigger._scriptQuest;
 
@@ -69,7 +71,7 @@ namespace CustomQuest
 
                     questTrigger._triggerMessage = trigger._triggerMessage;
 
-                    questTrigger._patternInstanceManager = null; //__instance, but only if it's _arenaSweepQuest I think?
+                    questTrigger._patternInstanceManager = null; // If I understand correctly, this is what manages everything with regards to dungeons.
                     Enum.TryParse(trigger._difficultyRequirement, out questTrigger._difficultyRequirement);
                     questTrigger._arenaSweepQuest = trigger._arenaSweepQuest;
 
@@ -89,11 +91,13 @@ namespace CustomQuest
                             (questTrigger._triggerCollider as SphereCollider).center = trigger._triggerCollider.center;
                             (questTrigger._triggerCollider as SphereCollider).radius = trigger._triggerCollider.radius;
                             break;
+
                         case "Box":
                             questTrigger._triggerCollider = questTrigger.gameObject.AddComponent<BoxCollider>();
                             (questTrigger._triggerCollider as BoxCollider).center = trigger._triggerCollider.center;
                             (questTrigger._triggerCollider as BoxCollider).size = trigger._triggerCollider.size;
                             break;
+
                         case "Capsule":
                             questTrigger._triggerCollider = questTrigger.gameObject.AddComponent<CapsuleCollider>();
                             (questTrigger._triggerCollider as CapsuleCollider).center = trigger._triggerCollider.center;
@@ -101,7 +105,6 @@ namespace CustomQuest
                             (questTrigger._triggerCollider as CapsuleCollider).height = trigger._triggerCollider.height;
                             (questTrigger._triggerCollider as CapsuleCollider).radius = trigger._triggerCollider.direction;
                             break;
-
                     }
 
                     //questTrigger._triggerCollider.enabled = true;
@@ -111,7 +114,7 @@ namespace CustomQuest
                     questTriggerObject.name = $"_QuestTrigger({questTrigger._scriptQuest._questName}, {questTrigger._questTriggerTag})";
 
                     SceneManager.MoveGameObjectToScene(questTriggerObject, __instance._loadedScene);
-                    NetworkServer.Spawn(questTriggerObject, (NetworkConnection)null);
+                    NetworkServer.Spawn(questTriggerObject);
                     Plugin.Logger.LogMessage("Quest Trigger created!");
                 }
             }
