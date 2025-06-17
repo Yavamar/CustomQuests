@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace CustomQuest
@@ -48,6 +49,26 @@ namespace CustomQuest
         public int _questCurrencyReward { get; set; } // The number of Crowns you receive upon completing the quest.
         public Dictionary<string, int> _questItemRewards { get; set; } // Items (and the amount of each item) you receive upon completing the quest.
         public bool _displayEndDemoPrompt { get; set; } // ???
+
+        // I spent a lot of time writing this function and now I'm not even sure if I need it. Commenting for now just in case I change my mind.
+        /*
+        public object GetObjectFromCache(string field, Dictionary<string, object> cache, string log)
+        {
+            FieldInfo field2 = typeof(ParsedQuest).GetField(field);
+            if (field2 != null)
+            {
+                if (cache.TryGetValue(field2.GetValue(this).ToString(), out object outValue))
+                {
+                    return outValue;
+                }
+                else
+                {
+                    Plugin.Logger.LogWarning($"{field2.GetType()} {field2.GetValue(this)} not found!");
+                }
+            }
+            return null;
+        }
+        */
     }
 
     /// <summary>

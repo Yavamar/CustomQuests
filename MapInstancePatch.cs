@@ -70,7 +70,7 @@ namespace CustomQuest
                     questTrigger._triggerMessage = trigger._triggerMessage;
 
                     questTrigger._patternInstanceManager = null; //__instance, but only if it's _arenaSweepQuest I think?
-                    Enum.TryParse("", out questTrigger._difficultyRequirement);
+                    Enum.TryParse(trigger._difficultyRequirement, out questTrigger._difficultyRequirement);
                     questTrigger._arenaSweepQuest = trigger._arenaSweepQuest;
 
                     /*

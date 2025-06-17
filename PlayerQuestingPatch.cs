@@ -8,14 +8,15 @@ namespace CustomQuest
     [HarmonyPatch(typeof(PlayerQuesting), "Start")]
     public static class PlayerQuestingPatch
     {
+        // This function executes as soon as the game loads the player's quest progress, which should be as soon as your character loads into the world.
         [HarmonyPrefix]
         private static void Prefix()
         {
-            if (Plugin.parsedQuests != null)
+            if (Plugin.parsedQuests != null) // If this is null, either all quests have already been loaded or there were no quests to load.
             {
                 foreach (ParsedQuest parsedQuest in Plugin.parsedQuests)
                 {
-                    // Save questGiver to assign the quest to the NPC later.
+                    // Save a dictionary of quest givers with a list of quest names for later. Those will be handled in DialogTriggerPatch.cs
                     if (Plugin.questGiver.ContainsKey(parsedQuest.questGiver))
                     {
                         Plugin.questGiver[parsedQuest.questGiver].Add(parsedQuest._questName);
@@ -25,8 +26,11 @@ namespace CustomQuest
                         Plugin.questGiver.Add(parsedQuest.questGiver, [parsedQuest._questName]);
                     }
 
+                    // Load the rest of the quest.
                     LoadQuestDetails(parsedQuest);
                 }
+
+                // Clear the parsedQuests list once the quests have all been loaded. This will prevent the quests from accidentally being loaded again.
                 Plugin.parsedQuests.Clear();
             }
         }
@@ -37,21 +41,33 @@ namespace CustomQuest
 
             gameManager._cachedScriptableQuests.TryGetValue(parsedQuest._questName, out ScriptableQuest quest);
 
+
+
+            // Quest Type
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Type.");
             if (!Enum.TryParse(parsedQuest._questType, out quest._questType))
             {
                 Plugin.Logger.LogWarning($"_questType {parsedQuest._questType} is not valid.");
             }
 
+
+
+            // Quest Sub-Type
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest SubType.");
             if (!Enum.TryParse(parsedQuest._questSubType, out quest._questSubType))
             {
                 Plugin.Logger.LogWarning($"_questSubType {parsedQuest._questSubType} is not valid.");
             }
 
+
+
+            // Quest Icon
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Icon.");
             quest._questIco = Plugin._cachedSprite[parsedQuest._questIco];
 
+
+
+            // Skill to Hide
             if (parsedQuest._skillToHide != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Skill To Hide.");
@@ -62,6 +78,9 @@ namespace CustomQuest
                 }
             }
 
+
+
+            // Race Requirement
             if (parsedQuest._raceRequirement != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Race Requirement.");
@@ -71,6 +90,9 @@ namespace CustomQuest
                 }
             }
 
+
+
+            // Base Class Requirement
             if (parsedQuest._baseClassRequirement != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Base Class Requirement.");
@@ -80,6 +102,9 @@ namespace CustomQuest
                 }
             }
 
+
+
+            // Pre-Quest Requirements
             if (parsedQuest._preQuestRequirements != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Pre-Quest Requirements.");
@@ -101,6 +126,9 @@ namespace CustomQuest
                 quest._preQuestRequirements = list.ToArray();
             }
 
+
+
+            // Quest Creep Requirements
             if (parsedQuest._questCreepRequirements != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Creep Requirements.");
@@ -125,6 +153,9 @@ namespace CustomQuest
                 quest._questObjective._questCreepRequirements = list.ToArray();
             }
 
+
+
+            // Quest Item Requirements
             if (parsedQuest._questItemRequirements != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Item Requirements.");
@@ -149,12 +180,18 @@ namespace CustomQuest
                 quest._questObjective._questItemRequirements = list.ToArray();
             }
 
+
+
+            // Quest Trigger Requirements
             if (parsedQuest._questTriggerRequirements != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Trigger Requirements.");
                 quest._questObjective._questTriggerRequirements = parsedQuest._questTriggerRequirements;
             }
 
+
+
+            // Quest Triggers
             if (parsedQuest.questTriggers != null)
             {
                 foreach (ParsedQuestTrigger trigger in parsedQuest.questTriggers)
@@ -164,6 +201,9 @@ namespace CustomQuest
                 }
             }
 
+
+
+            // Quest Objective Item
             if (parsedQuest._questObjectiveItem != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Objective Item.");
@@ -189,6 +229,9 @@ namespace CustomQuest
                 }
             }
 
+
+
+            // Quest Item Rewards
             if (parsedQuest._questItemRewards != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Item Rewards.");
