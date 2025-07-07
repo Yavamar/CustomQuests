@@ -63,7 +63,6 @@ public static class GameManagerPatch
             quest._questExperiencePercentage = parsedQuest._questExperiencePercentage;
         }
         quest._questCurrencyReward = parsedQuest._questCurrencyReward;
-        quest._displayEndDemoPrompt = parsedQuest._displayEndDemoPrompt;
 
         // Initialize all of the arrays.
         quest._preQuestRequirements = [];

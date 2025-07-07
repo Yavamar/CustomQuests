@@ -2,7 +2,6 @@
 using HarmonyLib;
 using Mirror;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 namespace CustomQuest
 {
@@ -113,7 +112,7 @@ namespace CustomQuest
 
                     questTriggerObject.name = $"_QuestTrigger({questTrigger._scriptQuest._questName}, {questTrigger._questTriggerTag})";
 
-                    SceneManager.MoveGameObjectToScene(questTriggerObject, __instance._loadedScene);
+                    UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(questTriggerObject, __instance._loadedScene); //Why do I have to move the object to the scene? And why doesn't it work online?
                     NetworkServer.Spawn(questTriggerObject);
                     Plugin.Logger.LogMessage("Quest Trigger created!");
                 }

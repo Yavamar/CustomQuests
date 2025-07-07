@@ -34,7 +34,7 @@ namespace CustomQuest
         public bool _requireNoviceClass { get; set; } // Only appears for Novice class. The quests for choosing your class at Lv10 use this.
         public bool _autoFinishQuest { get; set; } // Quest auto-completes once objectives are met. The class choice and weapon mastery quests use this.
         public string[] _preQuestRequirements { get; set; } // Pre-requisite quests. Quests listed here must be completed before you can see this quest.
-        public Dictionary<string, int> _questObjectiveItem { get; set; } // Item given to you at the start of the quest. This is the skillbook given to you for class and mastery quests.
+        public ParsedQuestItemReward _questObjectiveItem { get; set; } // Item given to you at the start of the quest. This is the skillbook given to you for class and mastery quests.
         public string _scenePath { get; set; } // ???
         public Dictionary<string, int> _questItemRequirements { get; set; } // Items (and the amount of each item) you are required to have in order to complete the quest.
         public Dictionary<string, int> _questCreepRequirements { get; set; } // Enemies (and the amount of each enemy) you are required to kill in order to complete the quest.
@@ -47,8 +47,7 @@ namespace CustomQuest
         public float _questExperiencePercentage { get; set; } // XP you recieve upon completing the quest, which is then multiplied by the XP gain curve to determine the actual amount of XP rewarded.
         public int _questExperienceReward { get; set; } // XP you recieve upon completing the quest. This will override _questExperiencePercentage if provided. Might be slightly inaccurate due to type conversions.
         public int _questCurrencyReward { get; set; } // The number of Crowns you receive upon completing the quest.
-        public Dictionary<string, int> _questItemRewards { get; set; } // Items (and the amount of each item) you receive upon completing the quest.
-        public bool _displayEndDemoPrompt { get; set; } // ???
+        public ParsedQuestItemReward[] _questItemRewards { get; set; } // Items (and the amount of each item) you receive upon completing the quest.
 
         // I spent a lot of time writing this function and now I'm not even sure if I need it. Commenting for now just in case I change my mind.
         /*
@@ -69,6 +68,14 @@ namespace CustomQuest
             return null;
         }
         */
+    }
+
+    public class ParsedQuestItemReward
+    {
+        public string _scriptItem { get; set; } // Item name
+        public int _scriptableStatModifier { get; set; } // Modifier index number. Corresponds to modifiers like Killer, Precise, Magical, etc.
+        public string scriptableStatModifierName { get; set; } // Allows you to specify modifier by its name ("Killer", "Precise", "Magical"). Overrides _scriptableStatModifier.
+        public int _itemQuantity { get; set; } // Quantity
     }
 
     /// <summary>

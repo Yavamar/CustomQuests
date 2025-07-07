@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace CustomQuest
 {
-    [HarmonyPatch(typeof(PlayerQuesting), "Start")]
+    [HarmonyPatch(typeof(PlayerQuesting), "OnStartAuthority")]
     public static class PlayerQuestingPatch
     {
         // This function executes as soon as the game loads the player's quest progress, which should be as soon as your character loads into the world.
@@ -40,6 +40,13 @@ namespace CustomQuest
             GameManager gameManager = Plugin.gameManager;
 
             gameManager._cachedScriptableQuests.TryGetValue(parsedQuest._questName, out ScriptableQuest quest);
+
+            // Create Dictionary<string,int> for ScriptableStatModifiers
+            Dictionary<string, ScriptableStatModifier> scriptableStatModifierNames = new();
+            foreach ((int _, ScriptableStatModifier a) in gameManager._cachedScriptableStatModifiers)
+            {
+                scriptableStatModifierNames.Add(a._modifierTag, a);
+            }
 
 
 
@@ -208,25 +215,28 @@ namespace CustomQuest
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Objective Item.");
 
-                foreach (var (itemName, amount) in parsedQuest._questObjectiveItem)
+                QuestItemReward objectiveItem = new();
+
+                if (!gameManager._cachedScriptableItems.TryGetValue(parsedQuest._questObjectiveItem._scriptItem, out objectiveItem._scriptItem))
                 {
-                    if (gameManager._cachedScriptableItems.TryGetValue(itemName, out ScriptableItem item))
-                    {
-                        //Try partial item name match for Homebrewery items.
-                        item = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, itemName).First();
-                    }
-
-                    quest._questObjectiveItem = new()
-                    {
-                        _scriptItem = item,
-                        _setItemData = new()
-                        {
-                            _itemName = itemName,
-                            _quantity = amount
-                        }
-                    };
-
+                    //Try partial item name match for Homebrewery items.
+                    objectiveItem._scriptItem = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedQuest._questObjectiveItem._scriptItem).First();
                 }
+
+                if (!gameManager._cachedScriptableStatModifiers.TryGetValue(parsedQuest._questObjectiveItem._scriptableStatModifier, out objectiveItem._scriptableStatModifier))
+                {
+                    //Not Found
+                }
+
+                if (parsedQuest._questObjectiveItem.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedQuest._questObjectiveItem.scriptableStatModifierName, out objectiveItem._scriptableStatModifier))
+                {
+                    //Not Found
+                }
+
+                objectiveItem._itemQuantity = parsedQuest._questObjectiveItem._itemQuantity;
+
+                quest._questObjectiveItem = objectiveItem;
+
             }
 
 
@@ -238,24 +248,29 @@ namespace CustomQuest
 
                 List<QuestItemReward> list = [];
 
-                foreach (var (itemName, amount) in parsedQuest._questItemRewards)
+                foreach (ParsedQuestItemReward parsedReward in parsedQuest._questItemRewards)
                 {
-                    if (gameManager._cachedScriptableItems.TryGetValue(itemName, out ScriptableItem item))
+                    QuestItemReward reward = new();
+
+                    if (!gameManager._cachedScriptableItems.TryGetValue(parsedReward._scriptItem, out reward._scriptItem))
                     {
                         //Try partial item name match for Homebrewery items.
-                        item = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, itemName).First();
+                        reward._scriptItem = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedReward._scriptItem).First();
                     }
 
-                    list.Add(new()
+                    if (!gameManager._cachedScriptableStatModifiers.TryGetValue(parsedReward._scriptableStatModifier, out reward._scriptableStatModifier))
                     {
-                        _scriptItem = item,
-                        _setItemData = new()
-                        {
-                            _itemName = itemName,
-                            _quantity = amount,
-                            _maxQuantity = amount
-                        }
-                    });
+                        //Not Found
+                    }
+
+                    if (parsedReward.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedReward.scriptableStatModifierName, out reward._scriptableStatModifier))
+                    {
+                        //Not Found
+                    }
+
+                    reward._itemQuantity = parsedReward._itemQuantity;
+
+                    list.Add(reward);
                 }
                 quest._questItemRewards = list.ToArray();
             }
