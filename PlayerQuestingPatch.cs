@@ -27,7 +27,19 @@ namespace CustomQuest
                     }
 
                     // Load the rest of the quest.
-                    LoadQuestDetails(parsedQuest);
+                    try
+                    {
+                        LoadQuestDetails(parsedQuest);
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Logger.LogError($"Error while loading quest \"{parsedQuest._questName}\" - Quest NOT loaded!");
+                        Plugin.Logger.LogError(e);
+
+                        // Unload the quest that threw the exception.
+                        Plugin.questGiver[parsedQuest.questGiver].Remove(parsedQuest._questName);
+                        Plugin.gameManager._cachedScriptableQuests.Remove(parsedQuest._questName);
+                    }
                 }
 
                 // Clear the parsedQuests list once the quests have all been loaded. This will prevent the quests from accidentally being loaded again.
@@ -54,7 +66,7 @@ namespace CustomQuest
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Type.");
             if (!Enum.TryParse(parsedQuest._questType, out quest._questType))
             {
-                Plugin.Logger.LogWarning($"_questType {parsedQuest._questType} is not valid.");
+                Plugin.Logger.LogWarning($"_questType: {parsedQuest._questType} is not valid quest type.");
             }
 
 
@@ -63,14 +75,20 @@ namespace CustomQuest
             Plugin.Logger.LogInfo(quest._questName + ": Setting Quest SubType.");
             if (!Enum.TryParse(parsedQuest._questSubType, out quest._questSubType))
             {
-                Plugin.Logger.LogWarning($"_questSubType {parsedQuest._questSubType} is not valid.");
+                Plugin.Logger.LogWarning($"_questSubType: {parsedQuest._questSubType} is not a valid quest subtype.");
             }
 
 
 
             // Quest Icon
-            Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Icon.");
-            quest._questIco = Plugin._cachedSprite[parsedQuest._questIco];
+            if (parsedQuest._questIco != null)
+            {
+                Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Icon.");
+                if (!Plugin._cachedSprite.TryGetValue(parsedQuest._questIco, out quest._questIco))
+                {
+                    Plugin.Logger.LogWarning($"Sprite \"{parsedQuest._questIco}\" not found!");
+                }
+            }
 
 
 
@@ -80,8 +98,7 @@ namespace CustomQuest
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Skill To Hide.");
                 if (!gameManager._cachedScriptableSkills.TryGetValue(parsedQuest._skillToHide, out quest._skillToHide))
                 {
-                    //quest._skillToHide = DictionaryExt.PartialMatch(gameManager._cachedScriptableSkills, parsedQuest._skillToHide).First();
-                    Plugin.Logger.LogWarning(quest._questName + ": Skill " + parsedQuest._skillToHide + " not found!");
+                    Plugin.Logger.LogWarning($"Skill \"{parsedQuest._skillToHide}\" not found! Defaulting to not hiding any skills.");
                 }
             }
 
@@ -93,7 +110,7 @@ namespace CustomQuest
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Race Requirement.");
                 if (!gameManager._cachedScriptableRaces.TryGetValue(parsedQuest._raceRequirement, out quest._raceRequirement))
                 {
-                    Plugin.Logger.LogWarning(quest._questName + ": Race " + parsedQuest._raceRequirement + " not found!");
+                    Plugin.Logger.LogWarning($"Race \"{parsedQuest._raceRequirement}\" not found! Defaulting to all races.");
                 }
             }
 
@@ -105,7 +122,7 @@ namespace CustomQuest
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Base Class Requirement.");
                 if (!gameManager._cachedScriptablePlayerClasses.TryGetValue(parsedQuest._baseClassRequirement, out quest._baseClassRequirement))
                 {
-                    Plugin.Logger.LogWarning(quest._questName + ": Class " + parsedQuest._baseClassRequirement + " not found!");
+                    Plugin.Logger.LogWarning($"Base Class \"{parsedQuest._baseClassRequirement}\" not found! Defaulting to all base classes.");
                 }
             }
 
@@ -126,7 +143,7 @@ namespace CustomQuest
                     }
                     else
                     {
-                        Plugin.Logger.LogWarning(quest._questName + ": Quest " + questName + " not found!");
+                        throw new Exception($"Quest \"{questName}\" not found!");
                     }
                 }
 
@@ -144,17 +161,32 @@ namespace CustomQuest
 
                 foreach (var (creepName, amount) in parsedQuest._questCreepRequirements)
                 {
-                    if (!gameManager._cachedScriptableCreeps.TryGetValue(creepName, out ScriptableCreep creep))
+                    if (amount > 0)
                     {
-                        //Try partial creep name match.
-                        creep = DictionaryExt.PartialMatch(gameManager._cachedScriptableCreeps, creepName).First();
-                    }
+                        if (!gameManager._cachedScriptableCreeps.TryGetValue(creepName, out ScriptableCreep creep))
+                        {
+                            //Try partial creep name match.
+                            IEnumerable<ScriptableCreep> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableCreeps, creepName);
+                            if(partialMatches.Count() > 0)
+                            {
+                                creep = partialMatches.First();
+                            }
+                            else
+                            {
+                                throw new Exception($"Creep \"{creepName}\" not found!");
+                            }
+                        }
 
-                    list.Add(new()
+                        list.Add(new()
+                        {
+                            _questCreep = creep,
+                            _creepsKilled = amount
+                        });
+                    }
+                    else 
                     {
-                        _questCreep = creep,
-                        _creepsKilled = amount
-                    });
+                        Plugin.Logger.LogWarning($"Creep \"{creepName}\" is set to require 0 or fewer kills. Ignoring this requirement.");
+                    }
                 }
 
                 quest._questObjective._questCreepRequirements = list.ToArray();
@@ -171,17 +203,32 @@ namespace CustomQuest
 
                 foreach (var (itemName, amount) in parsedQuest._questItemRequirements)
                 {
-                    if (!gameManager._cachedScriptableItems.TryGetValue(itemName, out ScriptableItem item))
+                    if (amount > 0)
                     {
-                        //Try partial item name match for Homebrewery items.
-                        item = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, itemName).First();
-                    }
+                        if (!gameManager._cachedScriptableItems.TryGetValue(itemName, out ScriptableItem item))
+                        {
+                            //Try partial item name match for Homebrewery items.
+                            IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, itemName);
+                            if (partialMatches.Count() > 0)
+                            {
+                                item = partialMatches.First();
+                            }
+                            else
+                            {
+                                throw new Exception($"Item \"{itemName}\" not found!");
+                            }
+                        }
 
-                    list.Add(new()
+                        list.Add(new()
+                        {
+                            _questItem = item,
+                            _itemsNeeded = amount
+                        });
+                    }
+                    else
                     {
-                        _questItem = item,
-                        _itemsNeeded = amount
-                    });
+                        Plugin.Logger.LogWarning($"Item \"{itemName}\" is set to require 0 or fewer quantity. Ignoring this requirement.");
+                    }
                 }
 
                 quest._questObjective._questItemRequirements = list.ToArray();
@@ -214,29 +261,44 @@ namespace CustomQuest
             if (parsedQuest._questObjectiveItem != null)
             {
                 Plugin.Logger.LogInfo(quest._questName + ": Setting Quest Objective Item.");
-
-                QuestItemReward objectiveItem = new();
-
-                if (!gameManager._cachedScriptableItems.TryGetValue(parsedQuest._questObjectiveItem._scriptItem, out objectiveItem._scriptItem))
+                if (parsedQuest._questObjectiveItem._itemQuantity > 0)
                 {
-                    //Try partial item name match for Homebrewery items.
-                    objectiveItem._scriptItem = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedQuest._questObjectiveItem._scriptItem).First();
-                }
+                    QuestItemReward objectiveItem = new();
 
-                if (!gameManager._cachedScriptableStatModifiers.TryGetValue(parsedQuest._questObjectiveItem._scriptableStatModifier, out objectiveItem._scriptableStatModifier))
+                    if (!gameManager._cachedScriptableItems.TryGetValue(parsedQuest._questObjectiveItem._scriptItem, out objectiveItem._scriptItem))
+                    {
+                        //Try partial item name match for Homebrewery items.
+                        IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedQuest._questObjectiveItem._scriptItem);
+                        if (partialMatches.Count() > 0)
+                        {
+                            objectiveItem._scriptItem = partialMatches.First();
+                        }
+                        else
+                        {
+                            throw new Exception($"Item \"{parsedQuest._questObjectiveItem._scriptItem}\" not found!");
+                        }
+                    }
+
+                    if (parsedQuest._questObjectiveItem._scriptableStatModifier != 0 && !gameManager._cachedScriptableStatModifiers.TryGetValue(parsedQuest._questObjectiveItem._scriptableStatModifier, out objectiveItem._scriptableStatModifier))
+                    {
+                        //Not Found
+                        Plugin.Logger.LogWarning($"Modifier index {parsedQuest._questObjectiveItem._scriptableStatModifier} is not valid. Valid range is between 0 and {gameManager._cachedScriptableStatModifiers.Count - 1}");
+                    }
+
+                    if (parsedQuest._questObjectiveItem.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedQuest._questObjectiveItem.scriptableStatModifierName, out objectiveItem._scriptableStatModifier))
+                    {
+                        //Not Found
+                        throw new Exception($"Modifier \"{parsedQuest._questObjectiveItem.scriptableStatModifierName}\" not found!");
+                    }
+
+                    objectiveItem._itemQuantity = parsedQuest._questObjectiveItem._itemQuantity;
+
+                    quest._questObjectiveItem = objectiveItem;
+                }
+                else
                 {
-                    //Not Found
+                    Plugin.Logger.LogWarning($"Item \"{parsedQuest._questObjectiveItem._scriptItem}\" is set to give 0 or fewer quantity. This item will not be provided.");
                 }
-
-                if (parsedQuest._questObjectiveItem.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedQuest._questObjectiveItem.scriptableStatModifierName, out objectiveItem._scriptableStatModifier))
-                {
-                    //Not Found
-                }
-
-                objectiveItem._itemQuantity = parsedQuest._questObjectiveItem._itemQuantity;
-
-                quest._questObjectiveItem = objectiveItem;
-
             }
 
 
@@ -250,27 +312,44 @@ namespace CustomQuest
 
                 foreach (ParsedQuestItemReward parsedReward in parsedQuest._questItemRewards)
                 {
-                    QuestItemReward reward = new();
-
-                    if (!gameManager._cachedScriptableItems.TryGetValue(parsedReward._scriptItem, out reward._scriptItem))
+                    if (parsedReward._itemQuantity > 0)
                     {
-                        //Try partial item name match for Homebrewery items.
-                        reward._scriptItem = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedReward._scriptItem).First();
-                    }
+                        QuestItemReward reward = new();
 
-                    if (!gameManager._cachedScriptableStatModifiers.TryGetValue(parsedReward._scriptableStatModifier, out reward._scriptableStatModifier))
+                        if (!gameManager._cachedScriptableItems.TryGetValue(parsedReward._scriptItem, out reward._scriptItem))
+                        {
+                            //Try partial item name match for Homebrewery items.
+                            IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedReward._scriptItem);
+                            if (partialMatches.Count() > 0)
+                            {
+                                reward._scriptItem = partialMatches.First();
+                            }
+                            else
+                            {
+                                throw new Exception($"Item \"{parsedReward._scriptItem}\" not found!");
+                            }
+                        }
+
+                        if (parsedReward._scriptableStatModifier != 0 && !gameManager._cachedScriptableStatModifiers.TryGetValue(parsedReward._scriptableStatModifier, out reward._scriptableStatModifier))
+                        {
+                            //Not Found
+                            Plugin.Logger.LogWarning($"Modifier index {parsedReward._scriptableStatModifier} is not valid. Valid range is between 0 and {gameManager._cachedScriptableStatModifiers.Count-1}");
+                        }
+
+                        if (parsedReward.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedReward.scriptableStatModifierName, out reward._scriptableStatModifier))
+                        {
+                            //Not Found
+                            Plugin.Logger.LogWarning($"Modifier \"{parsedReward.scriptableStatModifierName}\" not found! No modifier will be applied to the item.");
+                        }
+
+                        reward._itemQuantity = parsedReward._itemQuantity;
+
+                        list.Add(reward);
+                    }
+                    else
                     {
-                        //Not Found
+                        Plugin.Logger.LogWarning($"Item \"{parsedReward._scriptItem}\" is set to give 0 or fewer quantity. Ignoring this reward.");
                     }
-
-                    if (parsedReward.scriptableStatModifierName != null && !scriptableStatModifierNames.TryGetValue(parsedReward.scriptableStatModifierName, out reward._scriptableStatModifier))
-                    {
-                        //Not Found
-                    }
-
-                    reward._itemQuantity = parsedReward._itemQuantity;
-
-                    list.Add(reward);
                 }
                 quest._questItemRewards = list.ToArray();
             }
