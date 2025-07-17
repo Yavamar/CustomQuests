@@ -2,15 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
+using Mirror;
 
 namespace CustomQuest
 {
-    [HarmonyPatch(typeof(PlayerQuesting), "OnStartAuthority")]
+    [HarmonyPatch]
     public static class PlayerQuestingPatch
     {
         // This function executes as soon as the game loads the player's quest progress, which should be as soon as your character loads into the world.
         [HarmonyPrefix]
-        private static void Prefix()
+        [HarmonyPatch(typeof(PlayerQuesting), "OnStartAuthority")]
+        private static void LoadQuests()
         {
             if (Plugin.parsedQuests != null) // If this is null, either all quests have already been loaded or there were no quests to load.
             {
@@ -353,6 +355,58 @@ namespace CustomQuest
                 }
                 quest._questItemRewards = list.ToArray();
             }
+        }
+
+        // Breaking the netcode so I can turn in quests online.
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PlayerQuesting), "Client_CompleteQuest")]
+        private static bool Client_CompleteQuest(PlayerQuesting __instance, int _index)
+        {
+            if (!NetworkClient.active)
+            {
+                return false;
+            }
+
+            if (__instance._questProgressData.Count <= 0 || !__instance._questProgressData[_index]._questComplete)
+            {
+                return false;
+            }
+            ScriptableQuest scriptableQuest = GameManager._current.Locate_Quest(__instance._questProgressData[_index]._questTag);
+            if ((bool)scriptableQuest)
+            {
+                int expGain = (int)((float)(int)GameManager._current._statLogics._experienceCurve.Evaluate(scriptableQuest._questLevel) * scriptableQuest._questExperiencePercentage);
+                
+                //__instance._pStats.GainExp(expGain, __instance._pStats._currentLevel);
+                if (expGain > 0)
+                {
+                    string message = $"Gained experience. (+{expGain})";
+                    __instance._pStats._chatBehaviour.Init_GameLogicMessage(message);
+                    __instance._pStats.UserCode_Target_DisplayExpFloatText__Int32(expGain);
+                    __instance._pStats.Network_currentExp = __instance._pStats._currentExp + expGain;
+                }
+
+                //__instance._pInventory.Add_Currency(scriptableQuest._questCurrencyReward);
+                if (scriptableQuest._questCurrencyReward > 0 && __instance._pInventory._heldCurrency < GameManager._current._statLogics._maxCurrency)
+                {
+                    int num = __instance._pInventory._heldCurrency + scriptableQuest._questCurrencyReward;
+                    if (num >= GameManager._current._statLogics._maxCurrency)
+                    {
+                        num = GameManager._current._statLogics._maxCurrency;
+                    }
+
+                    string message = $"Picked up {GameManager._current._statLogics._currencyName}. (+{scriptableQuest._questCurrencyReward})";
+                    __instance._pInventory._chatBehaviour.Init_GameLogicMessage(message);
+                    __instance._pInventory.Network_heldCurrency = num;
+                }
+            }
+            return true;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PlayerQuesting), "UserCode_Cmd_InitServersideQuestRewards__String")]
+        private static bool UserCode_Cmd_InitServersideQuestRewards__String()
+        {
+            return false;
         }
     }
 }
