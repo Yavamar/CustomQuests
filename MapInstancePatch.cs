@@ -112,8 +112,9 @@ namespace CustomQuest
 
                     questTriggerObject.name = $"_QuestTrigger({questTrigger._scriptQuest._questName}, {questTrigger._questTriggerTag})";
 
-                    UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(questTriggerObject, __instance._loadedScene); //Why do I have to move the object to the scene? And why doesn't it work online?
-                    NetworkServer.Spawn(questTriggerObject);
+                    Plugin.Logger.LogMessage(__instance._loadedScene.name);
+                    UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(questTriggerObject, __instance._loadedScene); // __instance._loadedScene.name is null when playing online. It's the scene name when offline.
+                    NetworkServer.Spawn(questTriggerObject); // SpawnObject for _QuestTrigger(Taking Tuul Valley, TuulValleyEnd) (UnityEngine.GameObject), NetworkServer is not active. Cannot spawn objects without an active server.
                     Plugin.Logger.LogMessage("Quest Trigger created!");
                 }
             }

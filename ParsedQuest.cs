@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Device;
 
 namespace CustomQuest
 {
@@ -48,27 +51,7 @@ namespace CustomQuest
         public int _questExperienceReward { get; set; } // XP you recieve upon completing the quest. This will override _questExperiencePercentage if provided. Might be slightly inaccurate due to type conversions.
         public int _questCurrencyReward { get; set; } // The number of Crowns you receive upon completing the quest.
         public ParsedQuestItemReward[] _questItemRewards { get; set; } // Items (and the amount of each item) you receive upon completing the quest.
-
-        // I spent a lot of time writing this function and now I'm not even sure if I need it. Commenting for now just in case I change my mind.
-        /*
-        public object GetObjectFromCache(string field, Dictionary<string, object> cache, string log)
-        {
-            FieldInfo field2 = typeof(ParsedQuest).GetField(field);
-            if (field2 != null)
-            {
-                if (cache.TryGetValue(field2.GetValue(this).ToString(), out object outValue))
-                {
-                    return outValue;
-                }
-                else
-                {
-                    Plugin.Logger.LogWarning($"{field2.GetType()} {field2.GetValue(this)} not found!");
-                }
-            }
-            return null;
         }
-        */
-    }
 
     public class ParsedQuestItemReward
     {

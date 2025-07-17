@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
 using Mirror;
 
@@ -165,18 +166,9 @@ namespace CustomQuest
                 {
                     if (amount > 0)
                     {
-                        if (!gameManager._cachedScriptableCreeps.TryGetValue(creepName, out ScriptableCreep creep))
+                        if (!TryGetObject(creepName, gameManager._cachedScriptableCreeps, out ScriptableCreep creep))
                         {
-                            //Try partial creep name match.
-                            IEnumerable<ScriptableCreep> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableCreeps, creepName);
-                            if(partialMatches.Count() > 0)
-                            {
-                                creep = partialMatches.First();
-                            }
-                            else
-                            {
-                                throw new Exception($"Creep \"{creepName}\" not found!");
-                            }
+                            throw new Exception($"Creep \"{creepName}\" not found!");
                         }
 
                         list.Add(new()
@@ -207,18 +199,9 @@ namespace CustomQuest
                 {
                     if (amount > 0)
                     {
-                        if (!gameManager._cachedScriptableItems.TryGetValue(itemName, out ScriptableItem item))
+                        if (!TryGetObject(itemName, gameManager._cachedScriptableItems, out ScriptableItem item))
                         {
-                            //Try partial item name match for Homebrewery items.
-                            IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, itemName);
-                            if (partialMatches.Count() > 0)
-                            {
-                                item = partialMatches.First();
-                            }
-                            else
-                            {
-                                throw new Exception($"Item \"{itemName}\" not found!");
-                            }
+                            throw new Exception($"Item \"{itemName}\" not found!");
                         }
 
                         list.Add(new()
@@ -267,18 +250,9 @@ namespace CustomQuest
                 {
                     QuestItemReward objectiveItem = new();
 
-                    if (!gameManager._cachedScriptableItems.TryGetValue(parsedQuest._questObjectiveItem._scriptItem, out objectiveItem._scriptItem))
+                    if (!TryGetObject(parsedQuest._questObjectiveItem._scriptItem, gameManager._cachedScriptableItems, out objectiveItem._scriptItem))
                     {
-                        //Try partial item name match for Homebrewery items.
-                        IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedQuest._questObjectiveItem._scriptItem);
-                        if (partialMatches.Count() > 0)
-                        {
-                            objectiveItem._scriptItem = partialMatches.First();
-                        }
-                        else
-                        {
-                            throw new Exception($"Item \"{parsedQuest._questObjectiveItem._scriptItem}\" not found!");
-                        }
+                        throw new Exception($"Item \"{parsedQuest._questObjectiveItem._scriptItem}\" not found!");
                     }
 
                     if (parsedQuest._questObjectiveItem._scriptableStatModifier != 0 && !gameManager._cachedScriptableStatModifiers.TryGetValue(parsedQuest._questObjectiveItem._scriptableStatModifier, out objectiveItem._scriptableStatModifier))
@@ -318,18 +292,9 @@ namespace CustomQuest
                     {
                         QuestItemReward reward = new();
 
-                        if (!gameManager._cachedScriptableItems.TryGetValue(parsedReward._scriptItem, out reward._scriptItem))
+                        if (!TryGetObject(parsedReward._scriptItem, gameManager._cachedScriptableItems, out reward._scriptItem))
                         {
-                            //Try partial item name match for Homebrewery items.
-                            IEnumerable<ScriptableItem> partialMatches = DictionaryExt.PartialMatch(gameManager._cachedScriptableItems, parsedReward._scriptItem);
-                            if (partialMatches.Count() > 0)
-                            {
-                                reward._scriptItem = partialMatches.First();
-                            }
-                            else
-                            {
-                                throw new Exception($"Item \"{parsedReward._scriptItem}\" not found!");
-                            }
+                            throw new Exception($"Item \"{parsedReward._scriptItem}\" not found!");
                         }
 
                         if (parsedReward._scriptableStatModifier != 0 && !gameManager._cachedScriptableStatModifiers.TryGetValue(parsedReward._scriptableStatModifier, out reward._scriptableStatModifier))
@@ -357,6 +322,25 @@ namespace CustomQuest
             }
         }
 
+        private static bool TryGetObject<T>(string searchTerm, Dictionary<string, T> cache, out T foundObject)
+        {
+            if (!cache.TryGetValue(searchTerm, out foundObject))
+            {
+                //Try partial match
+                IEnumerable<T> partialMatches = DictionaryExt.PartialMatch(cache, searchTerm);
+                if (partialMatches.Count() > 0)
+                {
+                    foundObject = partialMatches.First();
+                }
+                else
+                {
+                    Plugin.Logger.LogWarning($"{typeof(T)} {searchTerm} not found!");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         // Breaking the netcode so I can turn in quests online.
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PlayerQuesting), "Client_CompleteQuest")]
@@ -374,6 +358,14 @@ namespace CustomQuest
             ScriptableQuest scriptableQuest = GameManager._current.Locate_Quest(__instance._questProgressData[_index]._questTag);
             if ((bool)scriptableQuest)
             {
+                for (int i = 0; i < scriptableQuest._questItemRewards.Length; i++)
+                {
+                    if (__instance._pInventory.Check_InventoryFull(scriptableQuest._questItemRewards[i]._scriptItem, scriptableQuest._questItemRewards[i]._itemQuantity))
+                    {
+                        return false;
+                    }
+                }
+
                 int expGain = (int)((float)(int)GameManager._current._statLogics._experienceCurve.Evaluate(scriptableQuest._questLevel) * scriptableQuest._questExperiencePercentage);
                 
                 //__instance._pStats.GainExp(expGain, __instance._pStats._currentLevel);
