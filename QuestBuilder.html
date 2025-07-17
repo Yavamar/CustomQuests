@@ -1,0 +1,282 @@
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	</head>
+	<body>
+		<h1>CustomQuest QuestBuilder</h1>
+		<p>
+		<form id="myForm">
+			<b>questGiver:</b> Name of the NPC that provides the quest.<br>
+			<input type="text" name="questGiver" required>
+			<p>
+			<b>_questName:</b> Name of the quest.<br>
+			<input type="text" name="_questName" required>
+			<p>
+			<b>_questType:</b> Sets whether the quest is repeatable. More quest types may be added in future versions of ATLYSS.<br>
+			<select name="_questType">
+			  <option value="SINGLE">Single</option>
+			  <option value="REPEATABLE">Repeatable</option>
+			</select>
+			<p>
+			<b>_questSubType:</b> The quest sub-type. Use "Normal Quest" if you aren't sure.<br>
+			<select name="_questSubType">
+			  <option value="NONE">Normal Quest</option>
+			  <option value="MAIN_QUEST">Main Quest</option>
+			  <option value="CLASS">Class Quest</option>
+			  <option value="SKILL">Skill Scroll</option>
+			</select>
+			<p>
+			<b>_questIco:</b> The name of the icon that appears next to the quest on the NPC quest menu.<br>
+			<input type="text" name="_questIco">
+			<p>
+			<b>_questDescription:</b> The quest description that appears on the NPC quest menu and in the quest log. Color tags are supported.<br>
+			<textarea rows="10" cols="40" name="_questDescription"></textarea>
+			<p>
+			<b>_questCompleteReturnMessage:</b> Message that appears in the quest log when a quest is complete. It usually mentions the NPC to return to and where they are.<br>
+			<textarea rows="4" cols="40" name="_questCompleteReturnMessage"></textarea>
+			<p>
+			<b>_questLevel:</b>	Minimum level the player must be to accept the quest.<br>
+			<input type="number" min="0" max="40" name="_questLevel">
+			<p>
+			<b>_raceRequirement:</b> Which race is allowed to do this quest?<br>
+			<select name="_raceRequirement">
+			  <option value="">Any Race</option>
+			  <option value="IMP">Imp</option>
+			  <option value="POON">Poon</option>
+			  <option value="KUBOLD">Kubold</option>
+			  <option value="BYRDLE">Byrdle</option>
+			  <option value="CHANG">Chang</option>
+			</select>
+			<p>
+			<b>_baseClassRequirement:</b> Which base class is allowed to do this quest?<br>
+			<select name="_baseClassRequirement">
+			  <option value="">Any Class</option>
+			  <option value="FIGHTER">Fighter</option>
+			  <option value="BANDIT">Bandit</option>
+			  <option value="MYSTIC">Mystic</option>
+			</select>
+			<p>
+			<b>_requireNoviceClass:</b> Should the player only be allowed to do this quest if they haven't chosen a class yet?<br>
+			<select name="_requireNoviceClass">
+			  <option value="true">Yes</option>
+			  <option value="false" selected>No</option>
+			</select>
+			<p>
+			<b>_autoFinishQuest:</b> If Yes, the quest will be turned in immediately after the objectives are met. If No, the player must return to the questgiver to turn in the quest.<br>
+			<select name="_autoFinishQuest">
+			  <option value="true">Yes</option>
+			  <option value="false" selected>No</option>
+			</select>
+			<p>
+			<b>_preQuestRequirements:</b> These quests must be completed before the current quest will appear.<br>
+			<button type="button" onclick="addPreQuestRequirement()">Add more quests</button>
+			<p>
+			<b>_questObjectiveItem:</b> This item is provided upon accepting the quest.<br>
+			<select name="_questObjectiveItem_scriptableStatModifier">
+			  <option value="0"> </option>
+			  <option value="1">Guardian</option>
+			  <option value="2">Killer</option>
+			  <option value="3">Magical</option>
+			  <option value="4">Precise</option>
+			  <option value="5">Lively</option>
+			  <option value="6">Manafont</option>
+			  <option value="7">Energetic</option>
+			  <option value="8">Molten</option>
+			  <option value="9">Tidal</option>
+			  <option value="10">Druidic</option>
+			  <option value="11">Earthen</option>
+			  <option value="12">Divine</option>
+			  <option value="13">Eldritch</option>
+			</select>
+			<input type="text" name="_questObjectiveItem_scriptItem"> x<input type="number" min="0" max="99" name="_questObjectiveItem_itemQuantity">
+			<p>
+			<b>_questItemRequirements:</b> Items (and the amount of each item) you are required to have in order to complete the quest.<br>
+			<button type="button" onclick="addItemRequirement()">Add more required items</button>
+			<p>
+			<b>_questCreepRequirements:</b> Enemies (and the amount of each enemy) you are required to kill in order to complete the quest.<br>
+			<button type="button" onclick="addCreepRequirement()">Add more required creeps</button>
+			<p>
+			<b>_questExperienceReward:</b> The amount of experience points you recieve upon completing the quest.<br>
+			<input type="number" name="_questExperienceReward">
+			<p>
+			<b>_questCurrencyReward:</b> The amount of Crowns you receive upon completing the quest.<br>
+			<input type="number" name="_questCurrencyReward">
+			<p>
+			<b>_questItemRewards:</b> Items (and the amount of each item) you receive upon completing the quest.<br>
+			<button type="button" onclick="addItemReward()">Add more item rewards</button>
+			<p>
+			<button type="button" onclick="generateJSONFile()">Generate Quest File</button>
+			<p>
+			<textarea rows="40" cols="80" id="output"></textarea>
+		</form>
+		
+		<script>		
+		function generateJSONFile()
+		{
+			var formData = $("#myForm").serializeArray();
+			
+			var convertedFormData = "{\n";
+			for (let i = 0; i < formData.length; i++)
+			{
+				switch(formData[i].name)
+				{
+					case "_preQuestRequirements":
+						convertedFormData += "    &quot;"+formData[i].name+"&quot;: [";
+						var num = 0;
+						while(formData[i].name == "_preQuestRequirements")
+						{
+							if(formData[i].value != "")
+							{
+								convertedFormData += "&quot;"+formData[i].value+"&quot;,";
+								num++;
+							}
+							i++;
+						}
+						if(num > 0)
+						{
+							convertedFormData = convertedFormData.slice(0,-1);
+						}
+						convertedFormData += "],\n";
+						break;
+						
+					case "_questObjectiveItem_scriptableStatModifier":
+						var tempString = "";
+						if(formData[i+1].value != "" && formData[i+2].value != "0" && formData[i+2].value != "")
+						{
+							tempString += "    &quot;_questObjectiveItem&quot;:\n    {\n";
+							if(formData[i].value != "0")
+							{
+								tempString += "        &quot;_scriptableStatModifier&quot;: &quot;"+formData[i].value+"&quot;,\n";
+							}
+							tempString += "        &quot;_scriptItem&quot;: &quot;"+formData[i+1].value+"&quot;,\n";
+							tempString += "        &quot;_itemQuantity&quot;: &quot;"+formData[i+2].value+"&quot;\n";
+							tempString += "    },\n";
+						}
+						convertedFormData += tempString;
+						i += 2;
+						
+						break;
+						
+					case "_questItemRequirements_questItem":
+						var tempString = "    &quot;_questItemRequirements&quot;:\n    {\n";;
+						var num = 0;
+						while(formData[i].name == "_questItemRequirements_questItem")
+						{
+							if(formData[i].value != "" && formData[i+1].value != "0" && formData[i+1].value != "")
+							{
+
+								//tempString += "        &quot;_questItem&quot;: &quot;"+formData[i].value+"&quot;,\n";
+								//tempString += "        &quot;_itemsNeeded&quot;: &quot;"+formData[i+1].value+"&quot;\n";
+								
+								tempString += "        &quot;"+formData[i].value+"&quot;: &quot;"+formData[i+1].value+"&quot;,\n";
+								num++;
+							}
+							i += 2;
+						}
+						
+						if(num > 0)
+						{
+							tempString = tempString.slice(0,-2);
+						}
+						tempString += "\n    },\n";
+						i--;
+						convertedFormData += tempString;
+						break;
+						
+					case "_questCreepRequirements_questCreep":
+						var tempString = "    &quot;_questCreepRequirements&quot;:\n    {\n";;
+						var num = 0;
+						while(formData[i].name == "_questCreepRequirements_questCreep")
+						{
+							if(formData[i].value != "" && formData[i+1].value != "0" && formData[i+1].value != "")
+							{
+
+								//tempString += "        &quot;_questCreep&quot;: &quot;"+formData[i].value+"&quot;,\n";
+								//tempString += "        &quot;_creepsKilled&quot;: &quot;"+formData[i+1].value+"&quot;\n";
+								
+								tempString += "        &quot;"+formData[i].value+"&quot;: &quot;"+formData[i+1].value+"&quot;,\n";
+								num++;
+							}
+							i += 2;
+						}
+								
+						if(num > 0)
+						{
+							tempString = tempString.slice(0,-2);
+						}
+						tempString += "\n    },\n";
+						i--;
+						convertedFormData += tempString;
+						break;
+						
+					case "_questItemRewards_scriptableStatModifier":
+						var tempString = "    &quot;_questItemRewards&quot;:\n    [\n";
+						var num = 0;
+						while(formData[i].name == "_questItemRewards_scriptableStatModifier")
+						{
+							if(formData[i+1].value != "" && formData[i+2].value != "0" && formData[i+2].value != "")
+							{
+								tempString += "        {\n";
+								if(formData[i].value != "0")
+								{
+									tempString += "            &quot;_scriptableStatModifier&quot;: &quot;"+formData[i].value+"&quot;,\n";
+								}
+								tempString += "            &quot;_scriptItem&quot;: &quot;"+formData[i+1].value+"&quot;,\n";
+								tempString += "            &quot;_itemQuantity&quot;: &quot;"+formData[i+2].value+"&quot;\n";
+								tempString += "        },\n";
+								num++;
+							}
+							i += 3;
+							if(i >= formData.length)
+							{
+								break;
+							}
+						}
+						if(num > 0)
+						{
+							tempString = tempString.slice(0,-2);
+						}
+						tempString += "\n    ],\n";
+						i--;
+						convertedFormData += tempString;
+						break;
+						
+					default:
+						if(formData[i].value != null && formData[i].value != "" && formData[i].value != 0 && formData[i].value != "false")
+						{
+							var value = formData[i].value.replace(/(?:\r\n|\r|\n)/g, '\\n');
+							convertedFormData += "    &quot;"+formData[i].name+"&quot;: &quot;"+value+"&quot;,\n";
+						}
+				}
+				
+
+			}
+			convertedFormData = convertedFormData.slice(0,-2);
+			convertedFormData += "\n}";
+			
+			document.getElementById("output").innerHTML = convertedFormData;
+		}
+		
+		function addPreQuestRequirement()
+		{
+			$('[onclick="addPreQuestRequirement()"]').before('<input type="text" name="_preQuestRequirements"><button type="button" onclick="removePreQuestRequirement()">Remove</button><br>');
+		}
+		
+		function addItemRequirement()
+		{
+			$('[onclick="addItemRequirement()"]').before('<input type="text" name="_questItemRequirements_questItem"> x<input type="number" min="0" max="99" name="_questItemRequirements_itemsNeeded"><br>');
+		}
+		
+		function addCreepRequirement()
+		{
+			$('[onclick="addCreepRequirement()"]').before('<input type="text" name="_questCreepRequirements_questCreep"> x<input type="number" min="0" max="99" name="_questCreepRequirements_creepsKilled"><br>');
+		}
+		
+		function addItemReward()
+		{
+			$('[onclick="addItemReward()"]').before('<select name="_questItemRewards_scriptableStatModifier"><option value="0"> </option><option value="1">Guardian</option><option value="2">Killer</option><option value="3">Magical</option><option value="4">Precise</option><option value="5">Lively</option><option value="6">Manafont</option><option value="7">Energetic</option><option value="8">Molten</option><option value="9">Tidal</option><option value="10">Druidic</option><option value="11">Earthen</option><option value="12">Divine</option><option value="13">Eldritch</option></select><input type="text" name="_questItemRewards_scriptItem"> x<input type="number" min="1" max="99" name="_questItemRewards_itemQuantity"><br>');
+		}
+		
+		</script>
+	</body>
+</html>
